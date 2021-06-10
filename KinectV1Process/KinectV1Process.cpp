@@ -3,9 +3,9 @@
 
 #include "stdafx.h"
 #include "KinectV1Handler.h"
-#include <KinectToVR.h>
 #include <openvr.h>
 #include <Windows.h>
+#include "Networking.cpp"
 
 // Logging Definitions
 INITIALIZE_EASYLOGGINGPP
@@ -45,17 +45,16 @@ int main(int argc, char* argv[])
 	START_EASYLOGGINGPP(argc, argv);
 	init_logging();
 	HWND hWnd = GetConsoleWindow();
-	ShowWindow(hWnd, SW_SHOW);
-#ifndef _DEBUG
-	ShowWindow(hWnd, SW_HIDE);
-#endif
+	ShowWindow(hWnd, SW_SHOW); //Always show the terminal, it is the only input method for now
 	KinectV1Handler kinect;
 	KinectSettings::leftFootJointWithRotation = KVR::KinectJointType::AnkleLeft;
 	KinectSettings::rightFootJointWithRotation = KVR::KinectJointType::AnkleRight;
 	KinectSettings::leftFootJointWithoutRotation = KVR::KinectJointType::FootLeft;
 	KinectSettings::rightFootJointWithoutRotation = KVR::KinectJointType::FootRight;
 
-	processLoop(kinect);
+	Networking networking;
+
+	netLoop(networking, kinect);
 	
 	return 0;
 }
