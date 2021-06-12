@@ -29,7 +29,7 @@ Grab all needed files from your current KinectToVR installation folder.<br>
 This also applies to OpenVR driver folders structure and files.
 
 ## This Branch
-This is a fork of the original [KinectToVR project] (https://github.com/KinectToVR/KinectToVR), designed to allow for a LAN connection between this client and the [corresponding server] (https://github.com/TonyGamer/KinectToVRShadowServer).<br>
+This is a fork of the original [KinectToVR project](https://github.com/KinectToVR/KinectToVR), designed to allow for a LAN connection between this client and the [corresponding server](https://github.com/TonyGamer/KinectToVRShadowServer).<br>
 The program is quite finicky to set up and has quite a few issues which I might fix in the future. <br>
 **Only the Kinect V1 (Kinect 360) sensor is compatible with this project at the moment**
 
