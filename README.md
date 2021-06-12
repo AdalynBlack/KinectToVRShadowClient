@@ -27,3 +27,35 @@ Follow **[GitHub Actions script](https://github.com/KimihikoAkayasaki/KinectToVR
 ## Deploy
 Grab all needed files from your current KinectToVR installation folder.<br>
 This also applies to OpenVR driver folders structure and files.
+
+## This Branch
+This is a fork of the original [KinectToVR project] (https://github.com/KinectToVR/KinectToVR), designed to allow for a LAN connection between this client and the [corresponding server] (https://github.com/TonyGamer/KinectToVRShadowServer).<br>
+The program is quite finicky to set up and has quite a few issues which I might fix in the future. <br>
+**Only the Kinect V1 (Kinect 360) sensor is compatible with this project at the moment**
+
+## First time setup
+- Set up the ZeroTierOne on both your local Windows machine and on the Shadow PC. You will want to note the IP address for the Shadow PC when you do this.
+- Install the server on the Shadow PC (This is the client, the repo for the server is linked above)
+- Install the client on your local machine
+
+## Installing the client
+- Download the zip found in the releases section of this repository
+- Unzip the file to a directory of your choosing
+
+## Use
+- Launch SteamVR on Shadow and connect your headset
+- Launch the KinectToVR server (KinectV1Process.exe on Shadow)
+- Launch the KinectToVR client (KinectV1Process.exe on your local machine)
+- Type in the IP for Shadow into the command prompt that launches and press enter
+
+If all has gone well, the GUI on the KinectToVR server should appear, at which point it should, for the most part, behave like a normal instance of KinectToVR
+If this is not the case, you will need to restart the server and try again
+
+## Notes
+- I highly recommend putting Virtual Desktop on both your local machine **and** Shadow. This makes the initial setup process much easier in my opinion
+- If the KinectToVR Server stops responding, you will need to restart the server and reconnect to it manually on the KinectToVR client
+- If the hip lagging behind bothers you, I recommend setting up owoTrack. The tracking quality from it is much better than the Kinect, and it helps mask the latency from the Kinect
+- Some times the tracking will stop working altogether when you leave sight of the Kinect for an extended period of time. If this happens then you must restart both the Server and Client processes
+- There is a noticable amount of latency, but from what I can tell it is mostly from the Kinect sensor itself, not the networking aspect added by this program
+
+If you have any issues with this program, feel free to create an issue on the repository and/or send me a message on Discord at TonyGamer#7947
