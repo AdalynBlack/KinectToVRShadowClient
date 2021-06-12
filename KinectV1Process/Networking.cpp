@@ -34,29 +34,17 @@ public:
 
         //const char* hello = "Hello from client";
         //char buffer[1024] = { 0 };
-        if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        {
-            printf("\n Socket creation error: %i \n", sock);
-            return;
-        }
 
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(PORT);
-
-        printf("Socket creation successful, please input the ip you wish to connect to (i.e. 192.168.2.2): ");
-
-        std::string ip;
+        printf("Please input the ip you wish to connect to (i.e. 192.168.2.2): ");
         std::cin >> ip;
 
-        serv_addr.sin_addr.s_addr = inet_addr(ip.c_str());
-
-        if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0)
+        if (connectToIP())
         {
-            printf("\nConnection Failed \n");
-            return;
+            printf("Connection Successful\n");
         }
-
-        printf("\nConnection Successful\n");
+        else {
+            printf("Connection Failed\n");
+        }
 
         // Convert IPv4 and IPv6 addresses from text to binary form
         /*if (InetPton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0)
@@ -72,18 +60,15 @@ public:
         //NUI_SKELETON_FRAME defaultSkeleton;
         char skeleBuf[PACKETSIZE];
 
-        printf("\n\nSerialization:\n");
         serializeFrame(&frame, skeleBuf);
 
         int i = 0;
         while (i < PACKETSIZE)
         {
             const int l = send(sock, &skeleBuf[i], __min(1024, PACKETSIZE - i), 0);
-            if (l < 0) { return; } // this is an error
+            if (l < 0) { connected = false; printf("\nDisconnected\n"); closesocket(sock); return; }
             i += l;
         }
-
-        printf("Skeleton Of Size %d Sent\n", i);
     }
 
     void closeSocket()
@@ -91,6 +76,73 @@ public:
         closesocket(sock);
         WSACleanup();
     }
+
+    bool connectToIP()
+    {
+        if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            printf("\n Socket creation error: %i \n", sock);
+            closesocket(sock);
+            return false;
+        }
+
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(PORT);
+        serv_addr.sin_addr.s_addr = inet_addr(ip.c_str());
+
+        u_long block = 1;
+        if (ioctlsocket(sock, FIONBIO, &block) == SOCKET_ERROR)
+        {
+            return false;
+        }
+
+        if (connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != WSAEWOULDBLOCK)
+            {
+                closesocket(sock);
+                return false;
+            }
+
+            fd_set setW, setE;
+
+            FD_ZERO(&setW);
+            FD_SET(sock, &setW);
+            FD_ZERO(&setE);
+            FD_SET(sock, &setE);
+
+            timeval time_out = { 0 };
+            time_out.tv_sec = 2;
+            time_out.tv_usec = 0;
+
+            int ret = select(0, NULL, &setW, &setE, &time_out);
+            if (ret <= 0)
+            {
+                // select() failed or connection timed out
+                closesocket(sock);
+                if (ret == 0)
+                    WSASetLastError(WSAETIMEDOUT);
+                return false;
+            }
+
+            if (FD_ISSET(sock, &setE))
+            {
+                // connection failed
+                int err = 0;
+                char buf[1024] = { 0 };
+                getsockopt(sock, SOL_SOCKET, SO_ERROR, buf, &err);
+                closesocket(sock);
+                WSASetLastError(err);
+                return false;
+            }
+        }
+
+        connected = true;
+        return true;
+    }
+
+    bool connected = false;
+    std::string ip;
 private:
     void serializeFrame(NUI_SKELETON_FRAME* frame, char *skeleBuf)
     {
@@ -145,8 +197,36 @@ inline void netLoop(Networking& networking, KinectV1Handler& kinect)
 
     while (1) //I don't like this but it is the way that was recommended so why not
     {
-        networking.sendSkeleton(kinect.skeletonFrame);
-        Sleep(34);
-        kinect.update();
+        if (networking.connected)
+        {
+            networking.sendSkeleton(kinect.skeletonFrame);
+            Sleep(34);
+            kinect.update();
+        }
+        else {
+            printf("\nThe connection has been interrupted, attempting to reconnect.\n\n");
+            bool tempCon = false;
+            Sleep(5);
+            for (int i = 0; i < 10; i++)
+            {
+                printf("Connection Attempt %d/10: ", i + 1);
+                if (!networking.connectToIP())
+                {
+                    printf("Failed\n");
+                }
+                else
+                {
+                    printf("Success\n");
+                    tempCon = true;
+                    break;
+                }
+            }
+
+            if (!tempCon) {
+                printf("\nUnable to reestablish connection automatically.\nPlease enter the IP you want to connect to: ");
+                std::cin >> networking.ip;
+                networking.connectToIP();
+            }
+        }
     }
 }
